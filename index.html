@@ -23,24 +23,46 @@
       color: #0ea5e9;
       margin-bottom: 20px;
     }
+    .toggle-container {
+      margin-bottom: 20px;
+    }
+    .toggle-btn {
+      background-color: #0ea5e9;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .toggle-btn:hover {
+      background-color: #0369a1;
+    }
   </style>
 </head>
 <body>
   <h1>Cumulative Mark Difference Chart</h1>
+
+  <div class="toggle-container">
+    <button id="toggleBtn" class="toggle-btn">Switch to Lowest-Based Mode</button>
+  </div>
+
   <canvas id="markChart" width="900" height="400"></canvas>
 
   <script>
-    // Correct order with REL included
     const subjects = ["Math", "B1", "B2", "REL", "Eng1", "Eng2", "ICT", "BGS", "Phy", "HM", "Che", "Bio"];
 
-    // Marks in the order of subjects above
     const marks = {
       Medha: [83, 88, 80, 87, 82, 88, 49, 96, 75, 71, 80, 88],
       Raiyan: [89, 80, 83, 92, 86, 92, 49, 99, 90, 96, 84, 96],
       Sourav: [91, 76, 78, 85, 70, 88, 47, 97, 93, 92, 82, 95]
     };
 
-    function calculateCumulativeDiff(data) {
+    let useTopperMode = true; // Start with topper-based mode
+
+    function calculateCumulativeDiff(data, topperBased = true) {
       const diffData = { Medha: [], Raiyan: [], Sourav: [] };
       let total = { Medha: 0, Raiyan: 0, Sourav: 0 };
 
@@ -49,100 +71,125 @@
         total.Raiyan += data.Raiyan[i];
         total.Sourav += data.Sourav[i];
 
-        // Find max cumulative total for this subject
-        const maxScore = Math.max(total.Medha, total.Raiyan, total.Sourav);
+        const compareValue = topperBased
+          ? Math.max(total.Medha, total.Raiyan, total.Sourav)
+          : Math.min(total.Medha, total.Raiyan, total.Sourav);
 
-        diffData.Medha.push(total.Medha - maxScore);
-        diffData.Raiyan.push(total.Raiyan - maxScore);
-        diffData.Sourav.push(total.Sourav - maxScore);
+        diffData.Medha.push(total.Medha - compareValue);
+        diffData.Raiyan.push(total.Raiyan - compareValue);
+        diffData.Sourav.push(total.Sourav - compareValue);
       }
 
       return diffData;
     }
 
-    const diffData = calculateCumulativeDiff(marks);
+    let chart;
 
-    const ctx = document.getElementById('markChart').getContext('2d');
-    new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: subjects,
-        datasets: [
-          {
-            label: 'Medha',
-            data: diffData.Medha,
-            borderColor: '#f97316', // orange
-            backgroundColor: 'transparent',
-            tension: 0.4,
-            pointRadius: 5,
-            pointHoverRadius: 7,
-          },
-          {
-            label: 'Raiyan',
-            data: diffData.Raiyan,
-            borderColor: '#0ea5e9', // sky blue
-            backgroundColor: 'transparent',
-            tension: 0.4,
-            pointRadius: 5,
-            pointHoverRadius: 7,
-          },
-          {
-            label: 'Sourav',
-            data: diffData.Sourav,
-            borderColor: '#10b981', // green
-            backgroundColor: 'transparent',
-            tension: 0.4,
-            pointRadius: 5,
-            pointHoverRadius: 7,
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                const val = context.raw;
-                return `${context.dataset.label}: ${val === 0 ? 'Topper' : val}`;
+    function renderChart(mode = true) {
+      const diffData = calculateCumulativeDiff(marks, mode);
+
+      const ctx = document.getElementById('markChart').getContext('2d');
+
+      if (chart) {
+        chart.destroy(); // Destroy old chart before creating a new one
+      }
+
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: subjects,
+          datasets: [
+            {
+              label: 'Medha',
+              data: diffData.Medha,
+              borderColor: '#f97316',
+              backgroundColor: 'transparent',
+              tension: 0.4,
+              pointRadius: 5,
+              pointHoverRadius: 7,
+            },
+            {
+              label: 'Raiyan',
+              data: diffData.Raiyan,
+              borderColor: '#0ea5e9',
+              backgroundColor: 'transparent',
+              tension: 0.4,
+              pointRadius: 5,
+              pointHoverRadius: 7,
+            },
+            {
+              label: 'Sourav',
+              data: diffData.Sourav,
+              borderColor: '#10b981',
+              backgroundColor: 'transparent',
+              tension: 0.4,
+              pointRadius: 5,
+              pointHoverRadius: 7,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const val = context.raw;
+                  return `${context.dataset.label}: ${val === 0 ? (mode ? 'Topper' : 'Lowest') : val}`;
+                }
+              }
+            },
+            legend: {
+              labels: {
+                color: 'white',
+                font: { weight: 'bold', size: 14 }
               }
             }
           },
-          legend: {
-            labels: {
-              color: 'white',
-              font: { weight: 'bold', size: 14 }
-            }
-          }
-        },
-        scales: {
-          y: {
-            ticks: {
-              color: 'white',
-              stepSize: 5,
-              callback: function(value) { return value === 0 ? 'Topper' : value; }
+          scales: {
+            y: {
+              ticks: {
+                color: 'white',
+                stepSize: 5,
+                callback: function(value) {
+                  return value === 0 ? (mode ? 'Topper' : 'Lowest') : value;
+                }
+              },
+              title: {
+                display: true,
+                text: 'Mark Difference',
+                color: 'white',
+                font: { size: 16, weight: 'bold' }
+              },
+              grid: {
+                color: '#334155'
+              }
             },
-            title: {
-              display: true,
-              text: 'Mark Difference (from Topper)',
-              color: 'white',
-              font: { size: 16, weight: 'bold' }
-            },
-            grid: {
-              color: '#334155'
-            }
-          },
-          x: {
-            ticks: {
-              color: 'white',
-              font: { weight: 'bold' }
-            },
-            grid: {
-              color: '#334155'
+            x: {
+              ticks: {
+                color: 'white',
+                font: { weight: 'bold' }
+              },
+              grid: {
+                color: '#334155'
+              }
             }
           }
         }
-      }
+      });
+    }
+
+    // First chart render
+    renderChart(useTopperMode);
+
+    // Toggle button functionality
+    document.getElementById('toggleBtn').addEventListener('click', () => {
+      useTopperMode = !useTopperMode;
+      renderChart(useTopperMode);
+
+      document.getElementById('toggleBtn').innerText = useTopperMode
+        ? 'Switch to Lowest-Based Mode'
+        : 'Switch to Topper-Based Mode';
     });
   </script>
 </body>
