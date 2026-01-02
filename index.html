@@ -4,7 +4,8 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Cumulative Mark Difference — Mobile First (Upgraded)</title>
-<script src="./chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
   :root {
     --bg: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 50%, #0d0d0d 100%);
@@ -1091,8 +1092,6 @@ function buildDatasets(diffs, smooth, isPC = false){
 }
 
 function renderChart(options = {}){
-  console.log('renderChart called with marks:', marks);
-  console.log('subjects:', subjects);
   const baseline = options.baseline || document.getElementById('baseline').value;
   const custom = options.custom || document.getElementById('customStudent').value;
   const smooth = 0.5;
@@ -1100,9 +1099,7 @@ function renderChart(options = {}){
   const isPC = window.innerWidth >= 768;
 
   const diffs = calculateDiffs(marks, baseline, custom);
-  console.log('diffs:', diffs);
   const datasets = buildDatasets(diffs, smooth, isPC);
-  console.log('datasets:', datasets);
   const data = { labels: subjects, datasets };
 
   // Calculate width based on number of subjects
@@ -1140,8 +1137,11 @@ function renderChart(options = {}){
   };
 
   if (chart) chart.destroy();
-  chart = new Chart(ctx, cfg);
-  console.log('Chart created:', chart);
+  try {
+    chart = new Chart(ctx, cfg);
+  } catch (e) {
+    console.error('Failed to create chart:', e);
+  }
 }
 
 function toggleFullscreen() {
@@ -1174,9 +1174,6 @@ function populateCustomStudent(){
   for(const name of Object.keys(marks)){
     const opt = document.createElement('option'); opt.value=name; opt.textContent=name; sel.appendChild(opt);
   }
-}
-function populateSubjects(){
-  document.getElementById('subjectsList').textContent = subjects.join(' · ');
 }
 function populateDatasetChips(){
   const wrap = document.getElementById('datasetToggle');
