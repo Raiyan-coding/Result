@@ -473,7 +473,7 @@
     }
 
     .chart-area {
-      flex-direction: column;
+      flex-direction: row;
       gap: 40px;
       margin-top: 50px;
     }
@@ -489,6 +489,8 @@
       border: 3px solid var(--accent);
       position: relative;
       padding: 20px;
+      flex: 1;
+      overflow-x: auto;
     }
 
     #markChart {
@@ -567,8 +569,8 @@
     }
 
     .side {
-      order: -1;
-      width: 100%;
+      width: 30%;
+      min-width: 300px;
       display: flex;
       flex-direction: column;
       gap: 30px;
@@ -889,7 +891,22 @@
       <h1>Exam Chart</h1>
     </div>
   </header>
-
+      <div style="margin-top:10px">
+        <label>Baseline নির্বাচন (কিভাবে তুলনা হবে)</label>
+      <div class="row" style="align-items:center">
+        <select id="baseline">
+          <option value="topper">Topper-based (সর্বোচ্চ)</option>
+          <option value="lowest">Lowest-based (সর্বনিম্ন)</option>
+          <option value="average">Average-based (গড়)</option>
+          <option value="custom">Custom student (নিজেকে তুলনা)</option>
+        </select>
+        
+        <div style="flex:1;margin-left:8px">
+          
+          <select id="customStudent"></select>
+        </div>
+        
+      </div>
   <div class="controls">
     <div class="card">
       <div style="margin-bottom:10px">
@@ -902,20 +919,7 @@
 
       </div>
 
-      <div style="margin-top:10px">
-        <label>Baseline নির্বাচন (কিভাবে তুলনা হবে)</label>
-      <div class="row" style="align-items:center">
-        <select id="baseline">
-          <option value="topper">Topper-based (সর্বোচ্চ)</option>
-          <option value="lowest">Lowest-based (সর্বনিম্ন)</option>
-          <option value="average">Average-based (গড়)</option>
-          <option value="custom">Custom student (নিজেকে তুলনা)</option>
-        </select>
-        <div style="flex:1;margin-left:8px">
-          <label class="muted">Custom (যদি প্রয়োজন)</label>
-          <select id="customStudent"></select>
-        </div>
-      </div>
+
 
 
     </div>
@@ -935,21 +939,10 @@
   <div class="chart-area">
     <div class="chart-wrapper">
       <canvas id="markChart" aria-label="Cumulative mark difference chart"></canvas>
-      <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶</button>
+     
     </div>
 
-    <aside class="side">
 
-
-      <div class="card small">
-        <strong>How to use</strong>
-        <ul>
-          <li>Baseline নির্বাচন করো — Topper/Lowest/Average/Custom</li>
-          <li>“Add your data” দিয়ে নাম ও প্রতিটি সাবজেক্টে নম্বর লেখো</li>
-          <li>Export PNG/CSV করে লাইভস্ট্রিমে দেখাও</li>
-        </ul>
-      </div>
-    </aside>
   </div>
 
 
@@ -1143,6 +1136,8 @@ function renderChart(options = {}){
     console.error('Failed to create chart:', e);
   }
 }
+
+
 
 function toggleFullscreen() {
   const elem = document.querySelector('.chart-wrapper');
